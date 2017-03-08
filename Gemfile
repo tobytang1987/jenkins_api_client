@@ -1,6 +1,6 @@
-source "https://rubygems.org"
+source "https://ruby.taobao.org/"
 
-gem "nokogiri", "~> 1.6.0"
+gem "nokogiri", "~> 1.6.7.2"
 gem "thor", ">= 0.16.0"
 gem "terminal-table", ">= 1.4.0"
 gem "mixlib-shellout", ">= 1.1.0"

@@ -73,7 +73,7 @@ module JenkinsApi
       #
       def get_age(task_name)
         @logger.info "Obtaining the age of task '#{task_name}' from the" +
-          " build queue"
+                         " build queue"
         age = nil
         details = get_details(task_name)
         unless details.empty?
@@ -90,7 +90,7 @@ module JenkinsApi
       #
       def get_details(task_name)
         @logger.info "Obtaining the details of task '#{task_name}' from the" +
-          " build queue"
+                         " build queue"
         response_json = @client.api_get_request("/queue")
         details = {}
         response_json["items"].each do |item|
@@ -118,7 +118,7 @@ module JenkinsApi
       #
       def get_causes(task_name)
         @logger.info "Obtaining the causes of task '#{task_name}' from the" +
-          " build queue"
+                         " build queue"
         causes = nil
         details = get_details(task_name)
         unless details.empty?
@@ -138,7 +138,7 @@ module JenkinsApi
       #
       def get_reason(task_name)
         @logger.info "Obtaining the reason of task '#{task_name}' from the" +
-          " build queue"
+                         " build queue"
         reason = nil
         details = get_details(task_name)
         unless details.empty?
@@ -156,7 +156,7 @@ module JenkinsApi
       #
       def get_eta(task_name)
         @logger.info "Obtaining the ETA for the task '#{task_name}' from the" +
-          " build queue"
+                         " build queue"
         eta = nil
         details = get_details(task_name)
         unless details.empty?
@@ -180,7 +180,7 @@ module JenkinsApi
       #
       def get_id(task_name)
         @logger.info "Obtaining the ID of task '#{task_name}' from the" +
-          " build queue"
+                         " build queue"
         id = nil
         details = get_details(task_name)
         unless details.empty?
@@ -197,7 +197,7 @@ module JenkinsApi
       #
       def get_params(task_name)
         @logger.info "Obtaining the build parameters of task '#{task_name}'" +
-          " from the build queue"
+                         " from the build queue"
         params = nil
         details = get_details(task_name)
         unless details.empty?
@@ -214,7 +214,7 @@ module JenkinsApi
       #
       def is_buildable?(task_name)
         @logger.info "Checking if task '#{task_name}' from the build queue" +
-          " is buildable"
+                         " is buildable"
         buildable = nil
         details = get_details(task_name)
         unless details.empty?
@@ -231,7 +231,7 @@ module JenkinsApi
       #
       def is_blocked?(task_name)
         @logger.info "Checking if task '#{task_name}' from the build queue" +
-          " is blocked"
+                         " is blocked"
         blocked = nil
         details = get_details(task_name)
         unless details.empty?
@@ -248,13 +248,44 @@ module JenkinsApi
       #
       def is_stuck?(task_name)
         @logger.info "Checking if task '#{task_name}' from the build queue" +
-          " is stuck"
+                         " is stuck"
         stuck = nil
         details = get_details(task_name)
         unless details.empty?
           stuck = details["stuck"]
         end
         stuck
+      end
+
+      def cancel_items(task_ids)
+        @logger.info 'Trying to cancel queue tasks'
+        task_ids.each do |task_id|
+          begin
+            @client.api_post_request("/queue/cancelItem?id=#{task_id}")
+            @logger.info "Task #{task_id} cancelled"
+          rescue JenkinsApi::Exceptions::ApiException => e
+            @logger.warn "Error while attempting to cancel pending task with id '#{task_id}'. #{e.class} #{e}"
+            raise
+          end
+        end
+      end
+
+      def get_items(task_name, params_filter=nil)
+        tasks = []
+        response_json = @client.api_get_request('/queue')
+        response_json['items'].each do |item|
+          if item['task']['name'].eql? task_name
+            if params_filter
+              params_filter.each do |key, value|
+                @logger.info "Pick items with param #{key}=#{value}"
+                tasks << item if item['params'].include? "#{key}=#{value}"
+              end
+            else
+              tasks << item
+            end
+          end
+        end
+        tasks
       end
 
     end
